@@ -1,4 +1,3 @@
-set.seed(10)
 eta <- function(r) {
   res <- 0
   if (r > 0) res <- r ** 2 * log(r)
@@ -120,7 +119,7 @@ plot.tps <- function(tps) {
   deltaz <- tps$beta[1: (k - 3)]  # k - 3
   delta <- qr.qy(tps$qrtk, c(rep(0, 3), deltaz))  # k
 
-  # plotting
+  # visualize test ...
   m <- 50
   x2 <- x1 <- seq(0, 1, length=m)
   xp <- cbind(rep(x1, m), rep(x2, each=m))
@@ -130,12 +129,3 @@ plot.tps <- function(tps) {
   contour(x1, x2, matrix(y, m, m))
   persp(x1, x2, matrix(y, m, m), theta=30, phi=30)
 }
-
-n <- 500
-x <- matrix(runif(n * 2), n, 2)
-ff <- function(p) {
-  exp(-(p[, 1] - .3) ^ 2 / .2 ^ 2 - (p[, 2] - .3) ^ 2 / .3 ^ 2) * .5 +
-    exp(-(p[, 1] - .7) ^ 2 / .25 ^ 2 - (p[, 2] - .8) ^ 2 / .3 ^ 2)
-}
-res <- fitTPS(x, ff(x))
-plot(res)
