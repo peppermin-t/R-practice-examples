@@ -1,11 +1,20 @@
+###########################################
+# Smoothing with Thin Plate Splines (TPS) #
+###########################################
+
+# Author: Yinjia Chen (s2520995)
+
+# This R code
+
 eta <- function(r) {
   res <- 0
   if (r > 0) res <- r ** 2 * log(r)
   res
 }
 
-eta_vec <- function(x_target, xk) {
-  apply(xk, 1, function(p) eta(dist(rbind(x_target, p))))
+eta_vec <- function(x, xk) {
+  sapply(sqrt(colSums((t(xk) - x) ** 2)), eta)
+  # apply(xk, 1, function(p) eta(dist(rbind(x_target, p))))
 }
 
 getTPS <- function(x, k=100) {
@@ -13,9 +22,13 @@ getTPS <- function(x, k=100) {
 
   # select xk
   n <- nrow(x)
-  ik <- 1: n
-  if (k < n) ik <- sample(n, k)
-  xk <- x[ik, ]  # if k=1, xk is a vector
+  if (k >= n) {
+    k <- n
+    ik <- 1: n
+  } else {
+    ik <- sample(n, k)
+  }  # concise?
+  xk <- x[ik, ]
 
   # generate matrix E
   E <- t(apply(x, 1, function(p) eta_vec(p, xk)))  # n * k; more concise ways?
@@ -46,12 +59,12 @@ getV <- function(tps, y, lambda, evrsr, R, qrx) {
   X <- tps$X
 
   U <- evrsr$vectors
-
   ev <- evrsr$values
 
   Diag <- diag(1 + lambda * ev)
-  y <- 1:n
-  betah <- solve(U %*% Diag %*% t(U) %*% R, qr.qty(qrx, y)[1: k])  # eigenvalues. concise  # notice the "[1: k]"!
+
+  # eigenvalues. concise  # notice the "[1: k]"!
+  betah <- solve(U %*% Diag %*% t(U) %*% R, qr.qty(qrx, y)[1: k])
 
   EDF <- sum(1 / diag(Diag))
 
@@ -62,50 +75,45 @@ getV <- function(tps, y, lambda, evrsr, R, qrx) {
 
 fitTPS <- function(x, y, k=100, lsp=c(-5, 5)) {
 
-  # set up the TPS
+  # set up the TPS and retrieve return values
   tps <- getTPS(x, k)
-
   k <- nrow(tps$xk) # renew k
-
   X <- tps$X
   S <- tps$S
 
-  qrx <- qr(X)  # qr.Q, concise
+  qrx <- qr(X)  # qr of X
 
   R <- qr.R(qrx)  # k, k
 
-  R_rev <- backsolve(R, diag(k))
+  Rinv <- backsolve(R, diag(k))  # k, k
 
-  RSR <- t(R_rev) %*% S %*% R_rev
+  RSR <- t(Rinv) %*% S %*% Rinv
 
   # checking symmetricy
-  if (max(abs(t(RSR) - RSR)) < 1e-7) {
-    RSR <- (RSR + t(RSR)) * 0.5
-  } else stop("the matrix is not symmetric!")
+  if (max(abs(t(RSR) - RSR)) < 1e-7) RSR <- (RSR + t(RSR)) * 0.5
+  else stop("the matrix is not symmetric!")
 
   evrsr <- eigen(RSR)  # more concise?
 
-  min_V <- .Machine$integer.max
-  best_V_bundle <- NULL
-  best_lambda <- 0
+  vpackb <- list(V=Inf)
+  lambdab <- 0
   edfs <- vector()
 
   for (i in seq(lsp[1], lsp[2], length.out=100)) {
     lambda <- exp(i)
-    V_bundle <- getV(tps, y, lambda, evrsr, R, qrx)
-    edfs <- c(edfs, V_bundle$EDF)
+    vpack <- getV(tps, y, lambda, evrsr, R, qrx)
+    edfs <- c(edfs, vpack$EDF)
 
-    if (V_bundle$V < min_V) {
-      min_V <- V_bundle$V
-      best_lambda <- lambda
-      best_V_bundle <- V_bundle
+    if (vpack$V < vpackb$V) {
+      lambdab <- lambda
+      vpackb <- vpack
     }
   }
 
   tps_list <- list(
-    beta=best_V_bundle$beta, mu=best_V_bundle$mu,
-    medf=best_V_bundle$EDF, lambda=best_lambda,
-    gcv=min_V, edf=edfs, qrtk=tps$qrtk, xk=tps$xk
+    beta=vpackb$beta, mu=vpackb$mu, medf=vpackb$EDF,
+    lambda=lambdab, gcv=vpackb$V, edf=edfs,
+    qrtk=tps$qrtk, xk=tps$xk
   )
   class(tps_list) <- "tps"
   tps_list
@@ -124,8 +132,14 @@ plot.tps <- function(tps) {
   x2 <- x1 <- seq(0, 1, length=m)
   xp <- cbind(rep(x1, m), rep(x2, each=m))
 
+  # cbind is faster than rbind
   y <- cbind(matrix(1, m * m, 1), xp) %*% alpha +
     t(apply(xp, 1, function(p) eta_vec(p, tps$xk))) %*% delta
+
   contour(x1, x2, matrix(y, m, m))
   persp(x1, x2, matrix(y, m, m), theta=30, phi=30)
 }
+
+# add test functions?
+# E's apply can be further simplified
+# plot's "y <-" should be clearer

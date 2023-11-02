@@ -10,5 +10,5 @@ n <- 500
 x <- matrix(runif(n * 2), n, 2)
 y <- ff(x) + rnorm(n) * .1 ## generate example data to fit
 
-res <- fitTPS(x, y)
-plot(res)
+system.time(res <- fitTPS(x, y))
+system.time(plot(res))
