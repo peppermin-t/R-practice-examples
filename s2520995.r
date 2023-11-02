@@ -14,7 +14,7 @@ eta <- function(r) {
 
 eta_vec <- function(x, xk) {
   sapply(sqrt(colSums((t(xk) - x) ** 2)), eta)
-  # apply(xk, 1, function(p) eta(dist(rbind(x_target, p))))
+  # apply(xk, 1, function(p) eta(dist(rbind(x, p))))
 }
 
 getTPS <- function(x, k=100) {
@@ -90,10 +90,7 @@ fitTPS <- function(x, y, k=100, lsp=c(-5, 5)) {
   RSR <- t(Rinv) %*% S %*% Rinv
 
   # checking symmetricy
-  if (max(abs(t(RSR) - RSR)) < 1e-7) RSR <- (RSR + t(RSR)) * 0.5
-  else stop("the matrix is not symmetric!")
-
-  evrsr <- eigen(RSR)  # more concise?
+  evrsr <- eigen(RSR, symmetric=TRUE)  # more concise?
 
   vpackb <- list(V=Inf)
   lambdab <- 0
@@ -113,7 +110,7 @@ fitTPS <- function(x, y, k=100, lsp=c(-5, 5)) {
   tps_list <- list(
     beta=vpackb$beta, mu=vpackb$mu, medf=vpackb$EDF,
     lambda=lambdab, gcv=vpackb$V, edf=edfs,
-    qrtk=tps$qrtk, xk=tps$xk
+    qrtk=tps$qrtk, xk=tps$xk, x_range=c(min(x), max(x))
   )
   class(tps_list) <- "tps"
   tps_list
@@ -129,7 +126,7 @@ plot.tps <- function(tps) {
 
   # visualize test ...
   m <- 50
-  x2 <- x1 <- seq(0, 1, length=m)
+  x2 <- x1 <- seq(tps$x_range[1], tps$x_range[2], length=m)
   xp <- cbind(rep(x1, m), rep(x2, each=m))
 
   # cbind is faster than rbind
@@ -140,6 +137,4 @@ plot.tps <- function(tps) {
   persp(x1, x2, matrix(y, m, m), theta=30, phi=30)
 }
 
-# add test functions?
 # E's apply can be further simplified
-# plot's "y <-" should be clearer
