@@ -315,7 +315,14 @@ plot.tps <- function(tps) {
     t(apply(xp, 1, function(p) eta_vec(p, tps$xk))) %*% delta  # m * m,
 
   # plot the contour of the generated spline according to the y and xp
-  contour(x1, x2, matrix(y, m, m))
-  # adjust the perspective of the plot's demonstration
-  persp(x1, x2, matrix(y, m, m), theta=30, phi=30)
+  contour(x1, x2, matrix(y, m, m), xlab="x1", ylab="x2")
+  # add a title to the contour
+  title("TPS fitting Result for the Input Set of 2-D x and 1-D y: Contour",
+        font = 4)
+  # plot the perspective plot of the generated spline according to the y and xp,
+  # and adjust the perspective of the plot's demonstration
+  persp(x1, x2, matrix(y, m, m), theta=30, phi=30, zlab="y")
+  # add a title to the perspective plot
+  title("TPS fitting Result for the Input Set of 2-D x and 1-D y: Perspective 
+        Plot", font = 4)
 }
