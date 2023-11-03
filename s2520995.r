@@ -77,21 +77,17 @@ getTPS <- function(x, k=100) {
   # generate the select rows index of choosing control points xk from the
   # given points x, ik (->> size: k,).
   if (k >= n) {
-
     # if control points' number k is greater than or equal to given points'
     # number n, set k to n
     k <- n
-
     # and further assign ik directly as 1: n, which means the control points
     # are exactly the original given points.
     ik <- 1: n
   } else {
-
     # Otherwise, randomly sample k row indices from 1:n as ik corresponding to
     # the selected control points
     ik <- sample(n, k)
   }
-
   # generate control points matrix xk
   xk <- x[ik, ]  # xk: [k, 2]
 
