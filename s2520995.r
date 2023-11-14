@@ -326,3 +326,32 @@ plot.tps <- function(tps) {
   title("TPS fitting Result for the Input Set of 2-D x and 1-D y: Perspective 
         Plot", font = 4)
 }
+
+# final score: 22/23
+
+# Auto-mark summary
+
+# 2/2 code loaded? (0 failed, 1 code outside functions, 2 OK)
+
+# Basic test with n=100 ...
+
+# 1/1 getTPS() ran?
+# 1/1 used xk as x unaltered?
+# 1/1 correct model matrix?
+# 1/1 correct penalty?
+# 1/1 EDF vector correct?
+# 1/1 optimum EDF correct?
+# 1/1 mu and/or beta correct?
+# 2/2 efficiency of getTPS (0 >1000*t_opt, 1 >200*t_opt, otherwise 2)
+# 2/2 efficiency of fitTPS (0 >100*t_opt, 1 >20*t_opt, otherwise 2)
+
+# Plot tests with n=500...
+
+# 2/2 plots (2 correct; 1 - minor errors; 0 - big errors/missing)?
+# 2/2 plots for x not in [0,1]^2 (2 OK; 1 - minor errors; 0 - errors/missing)?
+
+# 20/20 weighted total pre-comment marks and adjustment
+# 3/3 Comments is good
+
+# The RSR should not be computed explicitly.
+# -1
