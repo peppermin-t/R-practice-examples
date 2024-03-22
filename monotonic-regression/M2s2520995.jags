@@ -1,0 +1,44 @@
+# JAGS model on the effect value against concentration,
+#   which consider different decresing sequence for each expriemntal run
+model {
+  # Define parameters for each experimental run iteratively
+  for (j in 1: J) {
+
+	# Define x, the latent variable associated with the level,
+  	#   following a second order random walk model
+	x[1, j] ~ dnorm(0, .01)
+    x[2, j] ~ dnorm(x[1, j], tau)
+
+	for (i in 3: N) {
+      x[i, j] ~ dnorm(2 * x[i - 1, j] - x[i - 2, j], tau)
+	}
+
+	# Deterministically transforming x to m
+	m[1, j] <- 0
+
+    for (i in 2: N) {
+	  m[i, j] <- m[i - 1, j] - exp(x[i - 1, j])
+    }
+
+	# Deterministically generating mu, the smoothly
+	# 	varying sequence of positive numbers decresing from 1
+	for (i in 1: N) {
+	  mu[i, j] <- exp(m[i, j])
+    }
+
+	# Prior for Mj, the expected value of effect at zero dose
+	M[j] ~ dunif(0, 4000)
+
+	# Likelihood for the effect at each level
+	for (i in 1: N) {
+      # the expected effect value, ee, at each level
+	  ee[i, j] <- M[j] * mu[i, j]
+	  y[i, j] ~ dnorm(ee[i, j], tau0)
+	}
+  }
+
+  # Priors for the random walk model precision, and the effect precision
+  # same for every run
+  tau ~ dgamma(4, .04)
+  tau0 ~ dgamma(4, .04)
+}
